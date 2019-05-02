@@ -1,0 +1,92 @@
+#include <msp430.h>
+
+// TB6612FNG defines
+//#define AIN1 BIT1       // Px.1
+//#define AIN2 BIT6       // Px.6
+//#define BIN1 BIT0       // Px.0
+//#define BIN2 BIT1       // Px.1
+//#define STANDBY BIT3    // Px.3
+
+// button status
+//unsigned char buttonOn;
+int a;
+int flag;
+
+
+
+int main(void) {
+    WDTCTL = WDTPW + WDTHOLD; //Disable the Watchdog timer
+
+
+    P1SEL0 &= (~BIT3); // Set P1.3 SEL as GPIO
+    P1DIR &= (~BIT3); // Set P1.3 SEL as Input
+    P1IES |= (BIT3); // Falling Edge 1 -> 0
+    P1IFG &= (~BIT3); // Clear interrupt flag for P1.3
+    P1IE |= (BIT3); // Enable interrupt for P1.3
+
+
+    P1DIR |= BIT7; //Set pin 1.7 to the output direction.
+    P1SEL0 |= BIT7; //Select pin 1.7 as our PWM output.
+
+    TA0CCR0 = 1000; //Set the period in the Timer A0 Capture/Compare 0 register to 1000 us.
+    TA0CCTL1 = OUTMOD_7;
+    TA0CCR1 = 100; //The period in microseconds that the power is ON. It's half the time, which translates to a 50% duty cycle.
+    TA0CTL = TASSEL_2 + MC_1; //TASSEL_2 selects SMCLK as the clock source, and MC_1 tells it to count up to the value in TA0CCR0.
+
+    //SET STBY  high for the motors to drive
+    P1SEL0 &= (~BIT5); // Set P1.5 SEL for GPIO
+    P1DIR |= BIT5; // Set P1.5 as Output
+    P1OUT |= BIT5; // Set P1.5 LOW
+    __enable_interrupt(); // Enable Global Interrupts
+
+    //
+    while(1)
+    {
+ 
+                P1SEL0 &= (~BIT4); // Set P1.0 SEL for GPIO AIN1
+                P1DIR |= BIT4; // Set P1.0 as Output
+                P1OUT |= BIT4; // Set P1.0 HIGH
+
+                P1SEL0 &= (~BIT6); // Set P1.0 SEL for GPIO AN2
+                P1DIR &= ~BIT6; // Set P1.0 as Output
+                P1OUT &= ~BIT6; // Set P1.0 HIGH
+
+                __delay_cycles(1000000);
+
+
+                P1SEL0 &= (~BIT4); // Set P1.0 SEL for GPIO
+                P1DIR &= ~BIT4; // Set P1.0 as Output
+                P1OUT &= ~BIT4; // Set P1.0 HIGH
+
+                P1SEL0 &= (~BIT6); // Set P1.0 SEL for GPIO
+                P1DIR |= BIT6; // Set P1.0 as Output
+                P1OUT |= BIT6; // Set P1.0 HIGH
+
+                __delay_cycles(1000000);
+                
+                
+
+
+
+
+    }
+
+    __bis_SR_register(LPM0_bits); //Switch to low power mode 0.
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+//void full_brake(void);
+//void stop(void);
